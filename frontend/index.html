@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>SRE Practice App</title>
+</head>
+<body>
+    <h1>Submit Data</h1>
+    <form id="taskForm">
+        <input type="text" id="name" placeholder="Task Name" required>
+        <button type="submit">Submit</button>
+    </form>
+    <ul id="taskList"></ul>
+
+    <script>
+        const form = document.getElementById('taskForm');
+        form.onsubmit = async (e) => {
+            e.preventDefault();
+            const name = document.getElementById('name').value;
+            await fetch('http://localhost:5000/tasks', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ name, status: 'active' })
+            });
+            location.reload();
+        };
+
+        async function loadTasks() {
+            const res = await fetch('http://localhost:5000/tasks');
+            const tasks = await res.json();
+            tasks.forEach(t => {
+                const li = document.createElement('li');
+                li.innerText = t.name;
+                document.getElementById('taskList').appendChild(li);
+            });
+        }
+        loadTasks();
+    </script>
+</body>
+</html>
