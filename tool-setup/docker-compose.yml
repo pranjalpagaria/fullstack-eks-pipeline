@@ -1,0 +1,60 @@
+version: '3.8'
+
+services:
+  # 1. THE CI/CD ENGINE: Jenkins
+  jenkins:
+    image: jenkins/jenkins:lts
+    container_name: jenkins-server
+    ports:
+      - "8080:8080"
+      - "50000:50000"
+    user: root # Grants permissions to execute docker commands inside the pipeline
+    environment:
+      - JAVA_OPTS=-Djenkins.install.runSetupWizard=true
+    volumes:
+      - jenkins_data:/var/jenkins_home
+      # Mounts your laptop's Docker socket so Jenkins can build images
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      - devops-network
+
+  # 2. THE CODE QUALITY SCANNER: SonarQube
+  sonarqube:
+    image: sonarqube:community
+    container_name: sonarqube-server
+    ports:
+      - "9000:9000"
+    environment:
+      - SONAR_ES_BOOTSTRAP_CHECKS_DISABLE=true
+    volumes:
+      - sonarqube_data:/opt/sonarqube/data
+      - sonarqube_extensions:/opt/sonarqube/extensions
+      - sonarqube_logs:/opt/sonarqube/logs
+    networks:
+      - devops-network
+
+  # 3. THE SECURITY SCANNER: Trivy
+  # Running Trivy as a continuous service allows it to cache vulnerability databases locally,
+  # making your Jenkins pipeline scans lightning fast.
+  trivy:
+    image: aquasec/trivy:latest
+    container_name: trivy-scanner
+    volumes:
+      - trivy_cache:/root/.cache/
+      - /var/run/docker.sock:/var/run/docker.sock
+    entrypoint: ["trivy", "server", "--listen", "0.0.0.0:4954"]
+    ports:
+      - "4954:4954"
+    networks:
+      - devops-network
+
+networks:
+  devops-network:
+    driver: bridge
+
+volumes:
+  jenkins_data:
+  sonarqube_data:
+  sonarqube_extensions:
+  sonarqube_logs:
+  trivy_cache:
