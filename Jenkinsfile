@@ -24,8 +24,46 @@ pipeline {
        }
 
     }
+    stage('Paralle Pre Build Scans')
+    {
+     
+     parallel
+      {
+
+      stage('Sonar Static Analysis')
+      {
+        steps
+              {
+                        withSonarQubeEnv('SonarQube-Server') { 
+                            // Executes the automated static analysis across the repository
+                            sh "${tool env.SONAR_SCANNER}/bin/sonar-scanner \
+                                -Dsonar.projectKey=nodejs-fullstack-app \
+                                -Dsonar.sources=. \
+                                -Dsonar.exclusions=**/node_modules/**,**/build/**,**/dist/**"
+                                 }
+                                 } 
+
+     
+                                 } 
+
+     stage('Trivy FileSystem Verification')
+       {
+                steps{
+
+                            // Directly leverages the continuous Trivy container service over the Docker network
+                        sh "docker run --rm --network devops-network aquasec/trivy:latest fs --server http://trivy-scanner:4954 --exit-code 0 /apps"
+                     }
+
+
+}
+     
+    }
 
 
 
+
+
+
+}
 
 }
