@@ -32,7 +32,7 @@ pipeline {
                             sh """
                             ${tool env.SONAR_SCANNER}/bin/sonar-scanner \
                             -Dsonar.projectKey=nodejs-fullstack-app \
-                            -Dsonar.sources=. \
+                            -Dsonar.sources=backend \
                             -Dsonar.exclusions=**/node_modules/**,**/build/**,**/dist/**
                             """
                         }
