@@ -44,7 +44,7 @@ pipeline {
 
                         sh """
                         docker run --rm \
-                        --network devops-network \
+                        --network tool-setup_devops-network  \
                         -v \$(pwd):/app \
                         aquasec/trivy:latest fs \
                         --server http://trivy-scanner:4954 \
